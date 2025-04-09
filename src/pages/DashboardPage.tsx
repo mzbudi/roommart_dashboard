@@ -5,10 +5,12 @@ import SearchInput from "../components/SearchInput";
 import SortSelect from "../components/SortSelect";
 import FilterSelect from "../components/FilterSelect";
 import Pagination from "../components/Pagination";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const DashboardPage = () => {
   const user = useAuthStore((state) => state.user);
+  const navigate = useNavigate();
+
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [searchTerm, setSearchTerm] = useState(
@@ -151,7 +153,10 @@ const DashboardPage = () => {
           {/* Baris kontrol: Tambah Produk + Search + Sort + Filter */}
           <div className="mb-4 grid grid-cols-12 gap-4 items-center">
             <div className="col-span-12 md:col-span-3">
-              <button className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700">
+              <button
+                onClick={() => navigate("/dashboard/add")}
+                className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700"
+              >
                 + Tambah Produk
               </button>
             </div>
