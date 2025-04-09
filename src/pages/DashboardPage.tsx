@@ -5,15 +5,25 @@ import SearchInput from "../components/SearchInput";
 import SortSelect from "../components/SortSelect";
 import FilterSelect from "../components/FilterSelect";
 import Pagination from "../components/Pagination";
+import { useSearchParams } from "react-router-dom";
 
 const DashboardPage = () => {
   const user = useAuthStore((state) => state.user);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("name-asc");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [searchTerm, setSearchTerm] = useState(
+    searchParams.get("search") || ""
+  );
+  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "name-asc");
+  const [categoryFilter, setCategoryFilter] = useState(
+    searchParams.get("category") || "all"
+  );
+  const [currentPage, setCurrentPage] = useState(
+    Number(searchParams.get("page")) || 1
+  );
+  const [itemsPerPage, setItemsPerPage] = useState(
+    Number(searchParams.get("limit")) || 5
+  );
 
   const [products, setProducts] = useState([
     {
@@ -74,6 +84,26 @@ const DashboardPage = () => {
     setProducts(products.filter((p) => p.id !== id));
   };
 
+  // 🔁 Update URL jika ada perubahan filter/sort/page
+  useEffect(() => {
+    const params: Record<string, string> = {
+      search: searchTerm,
+      sort: sortBy,
+      category: categoryFilter,
+      page: String(currentPage),
+      limit: String(itemsPerPage),
+    };
+
+    // Hapus param kosong
+    Object.keys(params).forEach((key) => !params[key] && delete params[key]);
+
+    setSearchParams(params);
+  }, [searchTerm, sortBy, categoryFilter, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy, categoryFilter]);
+
   // 🔍 Filter berdasarkan search + kategori
   const filteredProducts = products.filter((product) => {
     const matchSearch = product.name
@@ -106,11 +136,6 @@ const DashboardPage = () => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  // Reset ke halaman 1 setiap filter berubah
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, sortBy, categoryFilter]);
 
   return (
     <DashboardLayout>
@@ -209,7 +234,7 @@ const DashboardPage = () => {
                 onPageChange={setCurrentPage}
                 onItemsPerPageChange={(count) => {
                   setItemsPerPage(count);
-                  setCurrentPage(1); // reset ke halaman pertama
+                  setCurrentPage(1);
                 }}
               />
             )}
