@@ -3,6 +3,7 @@ import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AddProductPage from "./pages/AddProductPage";
+import EditProductPage from "./pages/EditProductPage";
 
 function App() {
   return (
@@ -22,6 +23,14 @@ function App() {
         element={
           <ProtectedRoute>
             <AddProductPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/edit/:id"
+        element={
+          <ProtectedRoute>
+            <EditProductPage />
           </ProtectedRoute>
         }
       />

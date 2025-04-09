@@ -79,7 +79,7 @@ const DashboardPage = () => {
   ];
 
   const handleEdit = (id: number) => {
-    console.log("Edit produk dengan ID:", id);
+    navigate(`/dashboard/edit/${id}`)
   };
 
   const handleDelete = (id: number) => {
