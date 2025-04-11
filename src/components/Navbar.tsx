@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { logoutApi } from "../services/authService";
 import toast from "react-hot-toast";
 import { useState } from "react";
+import ConfirmationModal from "./ConfirmationModal";
 
 const Navbar = () => {
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -27,7 +29,9 @@ const Navbar = () => {
     <header className="w-full bg-white shadow-md p-4 flex justify-between items-center">
       <h1 className="text-lg font-bold">RoomMart Admin</h1>
       <button
-        onClick={handleLogout}
+        onClick={() => {
+          setIsModalOpen(true);
+        }}
         className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
       >
         {isLoggingOut ? (
@@ -36,6 +40,20 @@ const Navbar = () => {
           "Logout 🚪"
         )}
       </button>
+
+      {/* Modal konfirmasi logout */}
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        title="Konfirmasi Logout"
+        message="Apakah anda yakin ingin logout?"
+        cancelButtonMessage="Batal"
+        successButtonMessage="Logout"
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={() => {
+          setIsModalOpen(false);
+          handleLogout();
+        }}
+      />
     </header>
   );
 };

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import DashboardLayout from "../layout/DashboardLayout";
-import { useNavigate } from "react-router-dom";
+import { addProductApi } from "../services/addProductService";
+import toast from "react-hot-toast";
 
 const AddProductPage = () => {
   const [name, setName] = useState("");
@@ -8,6 +9,10 @@ const AddProductPage = () => {
   const [category, setCategory] = useState("makanan");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>(""); // Untuk preview
+  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -20,30 +25,54 @@ const AddProductPage = () => {
     }
   };
 
-  const navigate = useNavigate();
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Simulasi menyimpan produk
-    const newProduct = {
-      id: Date.now(),
-      name,
-      price,
-      category,
-      image: imageFile ? imageFile.name : "", // atau imagePreview
-    };
+    if (!name || !price || !category) {
+      setErrorMsg("Detail produk harus diisi lengkap!");
+      return;
+    }
 
-    console.log("Produk ditambahkan:", newProduct);
+    setIsLoading(true);
 
-    // Redirect kembali ke dashboard
-    navigate("/dashboard");
+    try {
+      await addProductApi(imageFile, {
+        name,
+        price,
+        category,
+      });
+
+      toast.success("Product berhasil ditambahkan");
+      handleReset();
+    } catch (error) {
+      console.error("Gagal menyimpan produk:", error);
+      alert("Terjadi kesalahan saat menyimpan produk.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    setName("");
+    setPrice(0);
+    setCategory("makanan");
+    setImageFile(null);
+    setImagePreview("");
+    setErrorMsg("");
+
+    // Reset input file secara langsung
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
     <DashboardLayout>
       <div className="max-w-xl mx-auto mt-8 p-6 bg-white shadow rounded">
         <h2 className="text-xl font-bold mb-4">Tambah Produk Baru</h2>
+        {errorMsg && (
+          <p className="text-red-500 text-sm mb-2 text-center">{errorMsg}</p>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block font-medium">Nama Produk</label>
@@ -84,6 +113,7 @@ const AddProductPage = () => {
               type="file"
               accept="image/*"
               onChange={handleImageChange}
+              ref={fileInputRef}
               className="w-full border p-2 rounded"
             />
             {imagePreview && (
@@ -97,9 +127,14 @@ const AddProductPage = () => {
 
           <button
             type="submit"
+            disabled={isLoading}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
-            Simpan Produk
+            {isLoading ? (
+              <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
+            ) : (
+              "Simpan Produk"
+            )}
           </button>
         </form>
       </div>
