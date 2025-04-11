@@ -1,8 +1,10 @@
 // useAuthStore.ts
 import { create } from "zustand";
 
-type User = {
+export interface User  {
+  uid: string;
   email: string;
+  accessToken: string;
 };
 
 type AuthStore = {
