@@ -9,6 +9,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Product } from "../interface/Product";
 import { getProductsApi } from "../services/getProductService";
 import { timeStampToDate } from "../utils/helper";
+import { deleteProduct } from "../services/deleteProductService";
+import toast from "react-hot-toast";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 const DashboardPage = () => {
   const user = useAuthStore((state) => state.user);
@@ -33,6 +36,8 @@ const DashboardPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const categoryOptions = [
     { label: "Semua Kategori", value: "all" },
@@ -105,6 +110,24 @@ const DashboardPage = () => {
 
   const handleEdit = (id: string) => {
     navigate(`/dashboard/edit/${id}`);
+  };
+
+  const handleOpenModal = (id: string) => {
+    setDeleteId(id);
+    setIsModalOpen(true); // Menampilkan modal
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteProduct(id);
+      await fetchData(currentPage);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message); // Menampilkan pesan error jika error adalah instance dari Error
+      } else {
+        toast.error("Gagal menghapus produk. Coba lagi.");
+      }
+    }
   };
 
   return (
@@ -184,7 +207,7 @@ const DashboardPage = () => {
                           Edit
                         </button>
                         <button
-                          onClick={() => {}}
+                          onClick={() => handleOpenModal(product.id!)}
                           className="text-red-500 hover:underline"
                         >
                           Hapus
@@ -218,6 +241,22 @@ const DashboardPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal konfirmasi logout */}
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        title="Konfirmasi Hapus"
+        message="Apakah anda yakin ingin menghapus product?"
+        cancelButtonMessage="Batal"
+        successButtonMessage="Hapus"
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={() => {
+          if (deleteId) {
+            handleDelete(deleteId); // Menggunakan ID yang disimpan untuk dihapus
+          }
+          setIsModalOpen(false); // Menutup modal setelah konfirmasi
+        }}
+      />
     </DashboardLayout>
   );
 };
