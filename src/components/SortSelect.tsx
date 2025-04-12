@@ -14,6 +14,8 @@ const defaultOptions: SortOption[] = [
   { label: "Nama Z-A", value: "name-desc" },
   { label: "Harga Terendah", value: "price-asc" },
   { label: "Harga Tertinggi", value: "price-desc" },
+  { label: "Terbaru", value: "createdAt-desc" },
+  { label: "Terlama", value: "createdAt-asc" },
 ];
 
 const SortSelect = ({

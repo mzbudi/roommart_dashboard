@@ -6,6 +6,9 @@ import SortSelect from "../components/SortSelect";
 import FilterSelect from "../components/FilterSelect";
 import Pagination from "../components/Pagination";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { Product } from "../interface/Product";
+import { getProductsApi } from "../services/getProductService";
+import { timeStampToDate } from "../utils/helper";
 
 const DashboardPage = () => {
   const user = useAuthStore((state) => state.user);
@@ -24,53 +27,12 @@ const DashboardPage = () => {
     Number(searchParams.get("page")) || 1
   );
   const [itemsPerPage, setItemsPerPage] = useState(
-    Number(searchParams.get("limit")) || 5
+    Number(searchParams.get("limit")) || 1
   );
 
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: "Produk A",
-      price: 10000,
-      category: "makanan",
-      imageUrl: "https://via.placeholder.com/100",
-    },
-    {
-      id: 2,
-      name: "Produk B",
-      price: 20000,
-      category: "minuman",
-      imageUrl: "https://via.placeholder.com/100",
-    },
-    {
-      id: 3,
-      name: "Air Mineral",
-      price: 5000,
-      category: "minuman",
-      imageUrl: "https://via.placeholder.com/100",
-    },
-    {
-      id: 4,
-      name: "Keripik Singkong",
-      price: 15000,
-      category: "makanan",
-      imageUrl: "https://via.placeholder.com/100",
-    },
-    {
-      id: 5,
-      name: "Teh Botol",
-      price: 8000,
-      category: "minuman",
-      imageUrl: "https://via.placeholder.com/100",
-    },
-    {
-      id: 6,
-      name: "Roti Bakar",
-      price: 12000,
-      category: "makanan",
-      imageUrl: "https://via.placeholder.com/100",
-    },
-  ]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const categoryOptions = [
     { label: "Semua Kategori", value: "all" },
@@ -78,13 +40,9 @@ const DashboardPage = () => {
     { label: "Minuman", value: "minuman" },
   ];
 
-  const handleEdit = (id: number) => {
-    navigate(`/dashboard/edit/${id}`)
-  };
-
-  const handleDelete = (id: number) => {
-    setProducts(products.filter((p) => p.id !== id));
-  };
+  // const handleDelete = (id: number) => {
+  //   setProducts(products.filter((p) => p.id !== id));
+  // };
 
   // 🔁 Update URL jika ada perubahan filter/sort/page
   useEffect(() => {
@@ -100,44 +58,54 @@ const DashboardPage = () => {
     Object.keys(params).forEach((key) => !params[key] && delete params[key]);
 
     setSearchParams(params);
+    fetchData(currentPage);
   }, [searchTerm, sortBy, categoryFilter, currentPage, itemsPerPage]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, sortBy, categoryFilter]);
+  // useEffect(() => {
+  //   setCurrentPage(1);
+  // }, [searchTerm, sortBy, categoryFilter]);
 
-  // 🔍 Filter berdasarkan search + kategori
-  const filteredProducts = products.filter((product) => {
-    const matchSearch = product.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchCategory =
-      categoryFilter === "all" ? true : product.category === categoryFilter;
-    return matchSearch && matchCategory;
-  });
+  const fetchData = async (page: number) => {
+    setLoading(true);
 
-  // 🔃 Sort setelah filter
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    switch (sortBy) {
-      case "name-asc":
-        return a.name.localeCompare(b.name);
-      case "name-desc":
-        return b.name.localeCompare(a.name);
-      case "price-asc":
-        return a.price - b.price;
-      case "price-desc":
-        return b.price - a.price;
-      default:
-        return 0;
+    try {
+      const [field, direction] = sortBy.split("-");
+
+      const directionValid = direction === "asc" ? "asc" : "desc";
+      const validFields: Array<"name" | "price" | "createdAt"> = [
+        "name",
+        "price",
+        "createdAt",
+      ];
+      const fieldValid = validFields.includes(
+        field as "name" | "price" | "createdAt"
+      )
+        ? (field as "name" | "price" | "createdAt")
+        : "createdAt";
+
+      const { products, totalPages } = await getProductsApi(
+        page,
+        itemsPerPage,
+        searchTerm,
+        {
+          field: fieldValid,
+          direction: directionValid,
+        },
+        categoryFilter
+      );
+
+      setProducts(products);
+      setTotalPages(totalPages);
+    } catch (error) {
+      console.error("Gagal memuat produk", error);
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
-  // 📄 Pagination
-  const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
-  const paginatedProducts = sortedProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const handleEdit = (id: string) => {
+    navigate(`/dashboard/edit/${id}`);
+  };
 
   return (
     <DashboardLayout>
@@ -185,13 +153,14 @@ const DashboardPage = () => {
                 <tr className="bg-gray-100 text-left">
                   <th className="border px-4 py-2">Foto</th>
                   <th className="border px-4 py-2">Nama</th>
+                  <th className="border px-4 py-2">Tanggal Dibuat</th>
                   <th className="border px-4 py-2">Harga</th>
                   <th className="border px-4 py-2">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedProducts.length > 0 ? (
-                  paginatedProducts.map((product) => (
+                {products.length > 0 ? (
+                  products.map((product) => (
                     <tr key={product.id}>
                       <td className="border px-4 py-2">
                         <img
@@ -202,17 +171,20 @@ const DashboardPage = () => {
                       </td>
                       <td className="border px-4 py-2">{product.name}</td>
                       <td className="border px-4 py-2">
+                        {timeStampToDate(product.createdAt)}
+                      </td>
+                      <td className="border px-4 py-2">
                         Rp {product.price.toLocaleString()}
                       </td>
                       <td className="border px-4 py-2 space-x-2">
                         <button
-                          onClick={() => handleEdit(product.id)}
+                          onClick={() => handleEdit(product.id!)}
                           className="text-blue-600 hover:underline"
                         >
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(product.id)}
+                          onClick={() => {}}
                           className="text-red-500 hover:underline"
                         >
                           Hapus

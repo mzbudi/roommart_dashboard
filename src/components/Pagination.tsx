@@ -69,7 +69,7 @@ const Pagination: React.FC<PaginationProps> = ({
           onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
           className="border rounded px-2 py-1 text-sm"
         >
-          {[5, 10, 20, 50].map((n) => (
+          {[1, 5, 10, 20, 50].map((n) => (
             <option key={n} value={n}>
               {n} item
             </option>
