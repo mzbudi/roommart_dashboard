@@ -38,7 +38,7 @@ const AddProductPage = () => {
     try {
       await addProductApi(imageFile, {
         name,
-        lowerName: name.toLowerCase(),
+        nameLower: name.toLowerCase(),
         price,
         category,
       });

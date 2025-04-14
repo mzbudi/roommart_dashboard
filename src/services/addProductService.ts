@@ -5,7 +5,12 @@ import { Product } from "../interface/Product";
 
 export const addProductApi = async (
   file: File | null,
-  { name, price, category }: Omit<Product, "imageUrl" | "id" | "createdAt">
+  {
+    name,
+    nameLower,
+    price,
+    category,
+  }: Omit<Product, "imageUrl" | "id" | "createdAt">
 ) => {
   let imageUrl = "";
 
@@ -17,6 +22,7 @@ export const addProductApi = async (
 
   const newProduct = {
     name,
+    nameLower,
     price,
     category,
     imageUrl,

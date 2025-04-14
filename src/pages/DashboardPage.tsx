@@ -30,7 +30,7 @@ const DashboardPage = () => {
     Number(searchParams.get("page")) || 1
   );
   const [itemsPerPage, setItemsPerPage] = useState(
-    Number(searchParams.get("limit")) || 1
+    Number(searchParams.get("limit")) || 5
   );
 
   const [products, setProducts] = useState<Product[]>([]);

@@ -1,4 +1,6 @@
 import {
+  doc,
+  getDoc,
   collection,
   getDocs,
   query,
@@ -96,4 +98,24 @@ export const getTotalProducts = async (
   const totalDocs = snapshot.data().count;
   const totalPages = Math.ceil(totalDocs / pageSize);
   return { totalData: totalDocs, totalPages };
+};
+
+export const getProductById = async (id: string): Promise<Product | null> => {
+  try {
+    const docRef = doc(db, "products", id);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      return {
+        id: docSnap.id,
+        ...docSnap.data(),
+      } as Product;
+    } else {
+      console.warn("Produk tidak ditemukan");
+      return null;
+    }
+  } catch (error) {
+    console.error("Gagal mengambil data produk:", error);
+    throw error;
+  }
 };

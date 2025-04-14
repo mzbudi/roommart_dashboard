@@ -1,28 +1,41 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import DashboardLayout from "../layout/DashboardLayout";
+import { getProductById } from "../services/getProductService";
+import { updateProduct } from "../services/updateProductService";
+import { Product } from "../interface/Product";
+import { toast } from "react-hot-toast";
 
 const EditProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const dummyProducts = JSON.parse(localStorage.getItem("products") || "[]");
-  const existingProduct = dummyProducts.find((p: any) => p.id === Number(id));
-
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState<number>(0);
-  const [category, setCategory] = useState("makanan");
+  const [product, setProduct] = useState<Product | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (existingProduct) {
-      setName(existingProduct.name);
-      setPrice(existingProduct.price);
-      setCategory(existingProduct.category);
-      setPreviewUrl(existingProduct.imageUrl); // base64 lama
-    }
-  }, [existingProduct]);
+    const fetchProduct = async () => {
+      try {
+        if (!id) return;
+        const fetched = await getProductById(id);
+        if (!fetched) {
+          toast.error("Produk tidak ditemukan");
+          return navigate("/dashboard");
+        }
+
+        setProduct(fetched);
+        setPreviewUrl(fetched.imageUrl || "");
+      } catch {
+        toast.error("Gagal mengambil data produk");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id, navigate]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -30,31 +43,42 @@ const EditProductPage = () => {
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewUrl(reader.result as string); // base64 preview
+        setPreviewUrl(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const updatedProduct = {
-      ...existingProduct,
-      name,
-      price,
-      category,
-      imageUrl: previewUrl, // base64 image
+  const handleChange =
+    (field: keyof Product) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const value = field === "price" ? Number(e.target.value) : e.target.value;
+      setProduct((prev) => (prev ? { ...prev, [field]: value } : null));
     };
 
-    const updatedList = dummyProducts.map((p: any) =>
-      p.id === Number(id) ? updatedProduct : p
-    );
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !product) return;
 
-    localStorage.setItem("products", JSON.stringify(updatedList));
+    try {
+      await updateProduct(id, {
+        name: product.name,
+        nameLower: product.nameLower.toLowerCase(),
+        price: product.price,
+        category: product.category,
+        imageFile,
+        existingImageUrl: previewUrl,
+      });
 
-    navigate("/dashboard");
+      toast.success("Produk berhasil diperbarui");
+      navigate("/dashboard");
+    } catch {
+      toast.error("Gagal memperbarui produk");
+    }
   };
+
+  if (loading) return <div className="p-4">Loading...</div>;
+  if (!product) return <div className="p-4">Produk tidak ditemukan.</div>;
 
   return (
     <DashboardLayout>
@@ -65,33 +89,36 @@ const EditProductPage = () => {
             <label className="block font-medium">Nama Produk</label>
             <input
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={product.name}
+              onChange={handleChange("name")}
               className="w-full border p-2 rounded"
               required
             />
           </div>
+
           <div>
             <label className="block font-medium">Harga</label>
             <input
               type="number"
-              value={price}
-              onChange={(e) => setPrice(Number(e.target.value))}
+              value={product.price}
+              onChange={handleChange("price")}
               className="w-full border p-2 rounded"
               required
             />
           </div>
+
           <div>
             <label className="block font-medium">Kategori</label>
             <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              value={product.category}
+              onChange={handleChange("category")}
               className="w-full border p-2 rounded"
             >
               <option value="makanan">Makanan</option>
               <option value="minuman">Minuman</option>
             </select>
           </div>
+
           <div>
             <label className="block font-medium">Gambar (opsional)</label>
             <input
@@ -108,11 +135,17 @@ const EditProductPage = () => {
               />
             )}
           </div>
+
           <button
             type="submit"
+            disabled={loading}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
           >
-            Simpan Perubahan
+            {loading ? (
+              <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
+            ) : (
+              "Simpan Perubahan"
+            )}
           </button>
         </form>
       </div>
