@@ -1,7 +1,7 @@
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db, storage } from "./firebase/firebaseConfig"; // pastikan sudah setup
-import { Product } from "../interface/Product";
+import { db, storage } from "../firebase/firebaseConfig"; // pastikan sudah setup
+import { Product } from "../../interface/Product";
 
 export const addProductApi = async (
   file: File | null,

@@ -18,8 +18,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <Link to="/dashboard" className="hover:underline">
               Daftar Produk
             </Link>
-            <Link to="/dashboard/add" className="hover:underline">
-              Tambah Produk
+            <Link to="/category" className="hover:underline">
+              Daftar Kategori
             </Link>
           </nav>
         </aside>

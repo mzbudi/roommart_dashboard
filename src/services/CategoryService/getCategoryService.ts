@@ -1,68 +1,57 @@
 import {
-  doc,
-  getDoc,
   collection,
   getDocs,
   query,
   orderBy,
   limit,
   startAfter,
-  QueryDocumentSnapshot,
-  DocumentData,
   getCountFromServer,
-  where,
   Query,
+  QueryConstraint,
   startAt,
   endAt,
-  QueryConstraint,
+  QueryDocumentSnapshot,
+  DocumentData,
+  doc,
+  getDoc,
 } from "firebase/firestore";
-import { db } from "./firebase/firebaseConfig";
-import { Product } from "../interface/Product";
+import { db } from "../firebase/firebaseConfig";
+import { Category } from "../../interface/Category";
 
-export const getProductsApi = async (
+export const getCategoriesApi = async (
   page: number,
   pageSize: number,
   searchQuery: string = "",
   sortBy: {
-    field: "createdAt" | "price" | "name";
+    field: "createdAt" | "name";
     direction: "asc" | "desc";
   } = {
     field: "createdAt",
     direction: "asc",
-  },
-  filterCategory?: string
+  }
 ): Promise<{
-  products: Product[];
+  categories: Category[];
   totalData: number;
   totalPages: number;
 }> => {
-  const q = collection(db, "products");
+  const q = collection(db, "categories");
 
   const constraints: QueryConstraint[] = [];
 
-  // 🔍 Search case-insensitive berdasarkan nameLower
   if (searchQuery) {
     const keyword = searchQuery.toLowerCase();
-    constraints.push(orderBy("nameLower"));
+    constraints.push(orderBy("nameLower")); // Field tambahan: simpan nama kecil semua huruf
     constraints.push(startAt(keyword));
     constraints.push(endAt(keyword + "\uf8ff"));
   } else {
-    // Default sort kalau tidak ada search
     constraints.push(orderBy(sortBy.field, sortBy.direction));
   }
 
-  // 🏷 Filter kategori jika ada
-  if (filterCategory && filterCategory !== "all") {
-    constraints.push(where("category", "==", filterCategory));
-  }
-
-  // Buat query dasar dengan constraints
   const baseQuery = query(q, ...constraints);
 
   const offset = (page - 1) * pageSize;
   let lastDoc: QueryDocumentSnapshot<DocumentData> | null = null;
 
-  // Offset manual
   if (offset > 0) {
     const offsetSnap = await getDocs(query(baseQuery, limit(offset)));
     lastDoc = offsetSnap.docs[offset - 1];
@@ -74,48 +63,51 @@ export const getProductsApi = async (
 
   const snapshot = await getDocs(pagedQuery);
 
-  const products = snapshot.docs.map((doc) => ({
+  const categories = snapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
-  })) as Product[];
+  })) as Category[];
 
-  const { totalData, totalPages } = await getTotalProducts(baseQuery, pageSize);
+  const { totalData, totalPages } = await getTotalCategories(
+    baseQuery,
+    pageSize
+  );
 
   return {
-    products,
+    categories,
     totalData,
     totalPages,
   };
 };
 
-// Fungsi untuk mendapatkan total produk (untuk menghitung total halaman)
-// total produk dihitung berdasarkan query yang diterapkan
-export const getTotalProducts = async (
-  q: Query, // Query yang digunakan (termasuk filter, search, dan sort)
+export const getTotalCategories = async (
+  q: Query,
   pageSize: number
-) => {
+): Promise<{ totalData: number; totalPages: number }> => {
   const snapshot = await getCountFromServer(q);
   const totalDocs = snapshot.data().count;
   const totalPages = Math.ceil(totalDocs / pageSize);
   return { totalData: totalDocs, totalPages };
 };
 
-export const getProductById = async (id: string): Promise<Product | null> => {
+export const getCategoryByIdApi = async (
+  id: string
+): Promise<Category | null> => {
   try {
-    const docRef = doc(db, "products", id);
+    const docRef = doc(db, "categories", id);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
       return {
         id: docSnap.id,
         ...docSnap.data(),
-      } as Product;
+      } as Category;
     } else {
-      console.warn("Produk tidak ditemukan");
+      console.warn("Kategori tidak ditemukan");
       return null;
     }
   } catch (error) {
-    console.error("Gagal mengambil data produk:", error);
+    console.error("Gagal mengambil data Kategori:", error);
     throw error;
   }
 };

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
-import DashboardLayout from "../layout/DashboardLayout";
-import { addProductApi } from "../services/addProductService";
+import DashboardLayout from "../../layout/DashboardLayout";
+import { addProductApi } from "../../services/ProductService/addProductService";
 import toast from "react-hot-toast";
 
 const AddProductPage = () => {

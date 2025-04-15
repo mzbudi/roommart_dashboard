@@ -1,17 +1,17 @@
-import { useAuthStore } from "../store/useAuthStore";
+import { useAuthStore } from "../../store/useAuthStore";
 import { useState, useEffect } from "react";
-import DashboardLayout from "../layout/DashboardLayout";
-import SearchInput from "../components/SearchInput";
-import SortSelect from "../components/SortSelect";
-import FilterSelect from "../components/FilterSelect";
-import Pagination from "../components/Pagination";
+import DashboardLayout from "../../layout/DashboardLayout";
+import SearchInput from "../../components/SearchInput";
+import SortSelect from "../../components/SortSelect";
+import FilterSelect from "../../components/FilterSelect";
+import Pagination from "../../components/Pagination";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Product } from "../interface/Product";
-import { getProductsApi } from "../services/getProductService";
-import { timeStampToDate } from "../utils/helper";
-import { deleteProduct } from "../services/deleteProductService";
+import { Product } from "../../interface/Product";
+import { getProductsApi } from "../../services/ProductService/getProductService";
+import { timeStampToDate } from "../../utils/helper";
+import { deleteProduct } from "../../services/ProductService/deleteProductService";
 import toast from "react-hot-toast";
-import ConfirmationModal from "../components/ConfirmationModal";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 const DashboardPage = () => {
   const user = useAuthStore((state) => state.user);
@@ -45,10 +45,6 @@ const DashboardPage = () => {
     { label: "Minuman", value: "minuman" },
   ];
 
-  // const handleDelete = (id: number) => {
-  //   setProducts(products.filter((p) => p.id !== id));
-  // };
-
   // 🔁 Update URL jika ada perubahan filter/sort/page
   useEffect(() => {
     const params: Record<string, string> = {
@@ -64,11 +60,8 @@ const DashboardPage = () => {
 
     setSearchParams(params);
     fetchData(currentPage);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, sortBy, categoryFilter, currentPage, itemsPerPage]);
-
-  // useEffect(() => {
-  //   setCurrentPage(1);
-  // }, [searchTerm, sortBy, categoryFilter]);
 
   const fetchData = async (page: number) => {
     setLoading(true);
@@ -141,33 +134,43 @@ const DashboardPage = () => {
             </p>
           </div>
 
-          {/* Baris kontrol: Tambah Produk + Search + Sort + Filter */}
-          <div className="mb-4 grid grid-cols-12 gap-4 items-center">
-            <div className="col-span-12 md:col-span-3">
-              <button
-                onClick={() => navigate("/dashboard/add")}
-                className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700"
-              >
-                + Tambah Produk
-              </button>
+          {loading && (
+            <div className="flex justify-center items-center h-16">
+              <div className="h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
             </div>
+          )}
 
-            <div className="col-span-12 md:col-span-9">
-              <div className="flex flex-wrap gap-2 justify-end">
-                <SearchInput
-                  value={searchTerm}
-                  onChange={setSearchTerm}
-                  placeholder="Cari produk..."
-                />
-                <SortSelect value={sortBy} onChange={setSortBy} />
-                <FilterSelect
-                  options={categoryOptions}
-                  value={categoryFilter}
-                  onChange={setCategoryFilter}
-                />
+          {!loading && (
+            <>
+              {/* Baris kontrol: Tambah Produk + Search + Sort + Filter */}
+              <div className="mb-4 grid grid-cols-12 gap-4 items-center">
+                <div className="col-span-12 md:col-span-3">
+                  <button
+                    onClick={() => navigate("/dashboard/add")}
+                    className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700"
+                  >
+                    + Tambah Produk
+                  </button>
+                </div>
+
+                <div className="col-span-12 md:col-span-9">
+                  <div className="flex flex-wrap gap-2 justify-end">
+                    <SearchInput
+                      value={searchTerm}
+                      onChange={setSearchTerm}
+                      placeholder="Cari produk..."
+                    />
+                    <SortSelect value={sortBy} onChange={setSortBy} />
+                    <FilterSelect
+                      options={categoryOptions}
+                      value={categoryFilter}
+                      onChange={setCategoryFilter}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
 
           {/* 📋 Tabel Produk */}
           <div className="overflow-x-auto">

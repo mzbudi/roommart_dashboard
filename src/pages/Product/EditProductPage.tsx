@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import DashboardLayout from "../layout/DashboardLayout";
-import { getProductById } from "../services/getProductService";
-import { updateProduct } from "../services/updateProductService";
-import { Product } from "../interface/Product";
+import DashboardLayout from "../../layout/DashboardLayout";
+import { getProductById } from "../../services/ProductService/getProductService";
+import { updateProduct } from "../../services/ProductService/updateProductService";
+import { Product } from "../../interface/Product";
 import { toast } from "react-hot-toast";
 
 const EditProductPage = () => {

@@ -1,5 +1,5 @@
 import { doc, deleteDoc } from "firebase/firestore";
-import { db } from "./firebase/firebaseConfig";
+import { db } from "../firebase/firebaseConfig";
 
 // Fungsi untuk menghapus produk berdasarkan ID
 export const deleteProduct = async (productId: string) => {
