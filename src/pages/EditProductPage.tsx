@@ -58,6 +58,8 @@ const EditProductPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+
     if (!id || !product) return;
 
     try {
@@ -71,13 +73,15 @@ const EditProductPage = () => {
       });
 
       toast.success("Produk berhasil diperbarui");
-      navigate("/dashboard");
+
+      // navigate("/dashboard");
     } catch {
       toast.error("Gagal memperbarui produk");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return <div className="p-4">Loading...</div>;
   if (!product) return <div className="p-4">Produk tidak ditemukan.</div>;
 
   return (
